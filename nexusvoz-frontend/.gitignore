@@ -1,0 +1,116 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Production builds
+build/
+dist/
+*.tgz
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Testing
+/coverage
+/.nyc_output
+/jest_*
+
+# IDEs and editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Package managers
+.npm
+.yarn-integrity
+.pnpm-store/
+
+# Optional REPL history
+.node_repl_history
+
+# Parcel cache
+.cache
+.parcel-cache
+
+# Vite
+.vite
+
+# Rollup cache
+.rollup.cache
+
+# Webpack cache
+.webpack
+
+# ESLint cache
+.eslintcache
+
+# Stylelint cache
+.stylelintcache
+
+# Typescript
+*.tsbuildinfo
+
+# Storybook build outputs
+.out
+.storybook-out
+storybook-static/
+
+# Temporary folders
+tmp/
+temp/
+
+# React specific
+build/
+public/hot
+public/storage
+
+# Misc
+*.tgz
+*.tar.gz
+
+# Local Netlify folder
+.netlify
+
+# Vercel
+.vercel

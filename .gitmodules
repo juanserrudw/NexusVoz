@@ -1,0 +1,3 @@
+[submodule "nexusvoz-frontend"]
+	path = nexusvoz-frontend
+	url = https://github.com/juanserrudw/NexusVoz.git

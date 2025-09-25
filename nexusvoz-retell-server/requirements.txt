@@ -1,0 +1,39 @@
+# FastAPI y servidor web
+fastapi
+uvicorn[standard]
+
+# WebSocket y comunicación asíncrona
+websockets
+httpx
+requests
+# Retell AI SDK
+retell-sdk
+
+# OpenAI para DeepSeek
+openai
+
+# Utilidades
+python-dotenv
+python-multipart
+
+# Logging y monitoreo
+structlog
+
+# Async support
+nest-asyncio
+
+# Validación y tipos
+pydantic
+
+# CORS
+fastapi[all]
+# JSON y utilidades
+ujson
+
+# Para manejo de fechas
+python-dateutil
+
+# Regex mejorado (opcional)
+regex
+
+

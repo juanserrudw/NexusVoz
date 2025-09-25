@@ -1,0 +1,170 @@
+services:
+  # Servidor de Retell AI 
+  nexusvoz-retell-server:
+    build: ./nexusvoz-retell-server  
+    container_name: nexusvoz-retell-server
+    ports:
+      - "8001:8001"
+    environment:
+      - AUTH_API_URL=http://nexusvoz-auth-api:8000
+      - DATABASE_URL=${DATABASE_URL}
+      - RETELL_API_KEY=${RETELL_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - AUTH_API_KEY=${AUTH_API_KEY}
+      - AGENT_ID_PHONE=${AGENT_ID_PHONE}
+      - AGENT_ID_WEB=${AGENT_ID_WEB}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SECRET_KEY=${SECRET_KEY}
+      
+    depends_on:
+      nexusvoz-postgres:
+        condition: service_healthy
+      nexusvoz-redis:
+        condition: service_healthy
+      nexusvoz-auth-api: 
+        condition: service_healthy
+    networks:
+      - nexusvoz-shared-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --timeout=2 --spider http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Servidor de Autenticación 
+  nexusvoz-auth-api:
+    build: ./auth_retelli_api  
+    container_name: nexusvoz-auth-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@nexusvoz-postgres:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY:-desarrollo-clave-secreta-cambiar-en-produccion}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - ENVIRONMENT=production
+      
+    depends_on:
+       nexusvoz-postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s  
+    restart: unless-stopped
+    networks:
+      - nexusvoz-shared-network
+    
+  # Base de datos PostgreSQL
+  nexusvoz-postgres:
+    image: postgres:15-alpine
+    container_name: nexusvoz-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-nexusvoz}
+      - POSTGRES_USER=${POSTGRES_USER:-nexusvoz}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_MULTIPLE_DATABASES=auth_user
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d  
+    networks:
+      - nexusvoz-shared-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexusvoz} -d ${POSTGRES_DB:-nexusvoz}"]
+      interval: 10s  
+      timeout: 5s
+      retries: 10  
+      start_period: 30s
+  
+  # Redis para cache
+  nexusvoz-redis:
+    image: redis:7-alpine
+    container_name: nexusvoz-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nexusvoz-shared-network
+
+  # Nginx como proxy reverso 
+  nginx:
+    image: nginx:alpine
+    container_name: auth_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - nexusvoz-retell-server
+      - nexusvoz-auth-api
+    restart: unless-stopped
+    networks:
+      - nexusvoz-shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # n8n para automatización
+  nexusvoz-n8n:
+    image: n8nio/n8n:latest
+    container_name: nexusvoz-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-password123}
+      - WEBHOOK_URL=http://nexusvoz-n8n:5678/
+      - GENERIC_TIMEZONE=${TZ:-America/Bogota}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - DB_SQLITE_POOL_SIZE=10
+      - N8N_RUNNERS_ENABLED=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - nexusvoz-shared-network
+    restart: unless-stopped
+    depends_on:
+      - nexusvoz-postgres
+      - nexusvoz-redis
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  n8n_data:
+    driver: local
+    
+networks:
+  nexusvoz-shared-network:
+    driver: bridge
+
+
+
