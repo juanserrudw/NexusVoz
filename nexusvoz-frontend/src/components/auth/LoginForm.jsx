@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Phone, LogIn, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,12 +12,14 @@ const LoginForm = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const { login, register } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       if (isLogin) {
@@ -29,10 +30,16 @@ const LoginForm = () => {
       } else {
         const result = await register(formData);
         if (result.success) {
-          setIsLogin(true);
+          // Mostrar mensaje de éxito
+          setSuccessMessage('Usuario registrado exitosamente. Redirigiendo al login...');
           setError('');
           setFormData({ email: '', password: '', username: '', full_name: '' });
-          alert('Usuario registrado exitosamente. Ahora puedes iniciar sesión.');
+          
+          // Redireccionar automáticamente después de 2 segundos
+          setTimeout(() => {
+            setIsLogin(true);
+            setSuccessMessage('');
+          }, 2000);
         } else {
           setError(result.error);
         }
@@ -70,6 +77,12 @@ const LoginForm = () => {
           {error && (
             <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
               <p className="text-red-200 text-sm">{error}</p>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3">
+              <p className="text-green-200 text-sm">{successMessage}</p>
             </div>
           )}
 
@@ -152,7 +165,11 @@ const LoginForm = () => {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+              setSuccessMessage('');
+            }}
             className="text-blue-300 hover:text-blue-200 transition-colors"
           >
             {isLogin 

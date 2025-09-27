@@ -53,7 +53,7 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
         status: 'scheduled'
       });
     }
-    setError(''); // Limpiar errores al abrir/cambiar modo
+    setError('');
   }, [appointment, mode, isOpen]);
 
   const validateForm = () => {
@@ -74,7 +74,6 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
       return false;
     }
     
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.client_email)) {
       setError('El formato del email no es válido');
@@ -96,7 +95,6 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
 
     try {
       if (mode === 'create') {
-        // Generar ID único para nueva cita
         const appointmentData = {
           appointment_id: `APT-${Date.now()}`,
           appointment_type: formData.appointment_type,
@@ -115,7 +113,6 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
         console.log('Appointment created successfully:', result);
         
       } else {
-        // Actualizar cita existente
         const updateData = {
           appointment_type: formData.appointment_type,
           client_name: formData.client_name.trim(),
@@ -138,11 +135,9 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
     } catch (error) {
       console.error('Error saving appointment:', error);
       
-      // Manejar diferentes tipos de errores
       let errorMessage = 'Error al guardar la cita. Intenta nuevamente.';
       
       if (error.status === 422 && error.data?.detail) {
-        // Error de validación - extraer mensajes
         if (Array.isArray(error.data.detail)) {
           const validationErrors = error.data.detail.map(err => err.msg).join(', ');
           errorMessage = `Error de validación: ${validationErrors}`;
@@ -169,188 +164,169 @@ const AppointmentModal = ({ appointment, isOpen, onClose, onSave, mode = 'create
       [e.target.name]: e.target.value
     });
     
-    // Limpiar error cuando el usuario empiece a escribir
     if (error) {
       setError('');
     }
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title={mode === 'create' ? 'Nueva Cita' : 'Editar Cita'}
-    >
-      <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Mostrar errores */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Cita *
-              </label>
-              <select
-                name="appointment_type"
-                value={formData.appointment_type}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="ventas">Ventas</option>
-                <option value="soporte_tecnico">Soporte Técnico</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Estado
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="scheduled">Programada</option>
-                <option value="confirmed">Confirmada</option>
-                <option value="completed">Completada</option>
-                <option value="cancelled">Cancelada</option>
-                <option value="no_show">No se presentó</option>
-              </select>
-            </div>
+    <Modal isOpen={isOpen} onClose={onClose} title={
+      mode === 'create' ? 'Nueva Cita' : 'Editar Cita'
+    }>
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Mostrar errores */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
           </div>
+        )}
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre del Cliente *
+              Tipo de Cita *
             </label>
-            <input
-              type="text"
-              name="client_name"
-              value={formData.client_name}
+            <select
+              name="appointment_type"
+              value={formData.appointment_type}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nombre completo del cliente"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email *
-              </label>
-              <input
-                type="email"
-                name="client_email"
-                value={formData.client_email}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="cliente@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                name="client_phone"
-                value={formData.client_phone}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="+57 300 123 4567"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha *
-              </label>
-              <input
-                type="date"
-                name="appointment_date"
-                value={formData.appointment_date}
-                onChange={handleChange}
-                required
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hora *
-              </label>
-              <input
-                type="time"
-                name="appointment_time"
-                value={formData.appointment_time}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            >
+              <option value="ventas">Ventas</option>
+              <option value="soporte_tecnico">Soporte Técnico</option>
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notas
+              Estado
             </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
+            <select
+              name="status"
+              value={formData.status}
               onChange={handleChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Información adicional sobre la cita..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="scheduled">Programada</option>
+              <option value="confirmed">Confirmada</option>
+              <option value="completed">Completada</option>
+              <option value="cancelled">Cancelada</option>
+              <option value="no_show">No se presentó</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre del Cliente *
+          </label>
+          <input
+            type="text"
+            name="client_name"
+            value={formData.client_name}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Nombre completo del cliente"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email *
+            </label>
+            <input
+              type="email"
+              name="client_email"
+              value={formData.client_email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="cliente@email.com"
             />
           </div>
 
-          {/* BOTONES CON POSICIONAMIENTO FIJO */}
-          <div style={{ 
-            position: 'sticky', 
-            bottom: '0', 
-            backgroundColor: 'white', 
-            paddingTop: '16px',
-            marginTop: '24px',
-            borderTop: '1px solid #e5e7eb',
-            marginLeft: '-24px',
-            marginRight: '-24px',
-            paddingLeft: '24px',
-            paddingRight: '24px'
-          }}>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={saving}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {saving && <LoadingSpinner size="sm" showText={false} />}
-                {mode === 'create' ? 'Crear Cita' : 'Guardar Cambios'}
-              </button>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Teléfono
+            </label>
+            <input
+              type="tel"
+              name="client_phone"
+              value={formData.client_phone}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="+57 300 123 4567"
+            />
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha *
+            </label>
+            <input
+              type="date"
+              name="appointment_date"
+              value={formData.appointment_date}
+              onChange={handleChange}
+              required
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Hora *
+            </label>
+            <input
+              type="time"
+              name="appointment_time"
+              value={formData.appointment_time}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Notas
+          </label>
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            placeholder="Información adicional sobre la cita..."
+          />
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {saving && <LoadingSpinner size="sm" showText={false} />}
+            {mode === 'create' ? 'Crear Cita' : 'Guardar Cambios'}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 };
@@ -388,7 +364,6 @@ const Appointments = () => {
       setLoading(true);
       setError('');
       
-      // Usar los parámetros que acepta tu API
       const params = {
         limit: 100,
         skip: 0
@@ -402,7 +377,6 @@ const Appointments = () => {
     } catch (error) {
       console.error('Error fetching appointments:', error);
       
-      // Manejar errores de forma segura
       let errorMessage = 'Error al cargar las citas. Intenta nuevamente.';
       
       if (error.status === 401) {
@@ -423,7 +397,6 @@ const Appointments = () => {
   const applyFilters = () => {
     let filtered = [...appointments];
 
-    // Filtrar por búsqueda de texto
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(apt => 
@@ -433,24 +406,20 @@ const Appointments = () => {
       );
     }
 
-    // Filtrar por tipo
     if (filters.appointment_type) {
       filtered = filtered.filter(apt => apt.appointment_type === filters.appointment_type);
     }
 
-    // Filtrar por estado
     if (filters.status) {
       filtered = filtered.filter(apt => apt.status === filters.status);
     }
 
-    // Filtrar por fecha desde
     if (filters.date_from) {
       filtered = filtered.filter(apt => 
         apt.appointment_date && new Date(apt.appointment_date) >= new Date(filters.date_from)
       );
     }
 
-    // Filtrar por fecha hasta
     if (filters.date_to) {
       filtered = filtered.filter(apt => 
         apt.appointment_date && new Date(apt.appointment_date) <= new Date(filters.date_to)
@@ -484,7 +453,6 @@ const Appointments = () => {
       console.log('Deleting appointment:', selectedAppointment.appointment_id);
       await appointmentService.deleteAppointment(selectedAppointment.appointment_id);
       
-      // Remover de la lista local
       setAppointments(prev => 
         prev.filter(apt => apt.appointment_id !== selectedAppointment.appointment_id)
       );
@@ -494,7 +462,6 @@ const Appointments = () => {
     } catch (error) {
       console.error('Error deleting appointment:', error);
       
-      // Mostrar error de forma segura
       let errorMessage = 'Error al eliminar la cita.';
       if (error.message) {
         errorMessage = error.message;
@@ -513,7 +480,6 @@ const Appointments = () => {
     } catch (error) {
       console.error('Error updating appointment status:', error);
       
-      // Mostrar error de forma segura
       let errorMessage = 'Error al actualizar el estado de la cita.';
       if (error.message) {
         errorMessage = error.message;
@@ -860,6 +826,3 @@ const Appointments = () => {
 };
 
 export default Appointments;
-
-
-

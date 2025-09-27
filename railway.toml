@@ -1,0 +1,29 @@
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+startCommand = "docker-compose up"
+
+[[services]]
+name = "nexusvoz-postgres"
+source = "."
+
+[[services]]
+name = "nexusvoz-redis"  
+source = "."
+
+[[services]]
+name = "nexusvoz-auth-api"
+source = "./auth_retelli_api"
+
+[[services]]
+name = "nexusvoz-retell-server"
+source = "./nexusvoz-retell-server"
+
+[[services]]
+name = "nexusvoz-frontend"
+source = "./nexusvoz-frontend"
+
+[[services]]
+name = "nexusvoz-n8n"
+source = "."
